@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thermal Print</title>
+<meta name="theme-color" content="#111">
+<style>
+  :root { --bg:#fff; --fg:#111; --mute:#777; --line:#ddd; --btn:#111; --btnfg:#fff; --paper:#fff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111; --fg:#eee; --mute:#999; --line:#333; --btn:#eee; --btnfg:#111; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, system-ui, sans-serif; }
+  main { max-width:440px; margin:0 auto; padding:16px 16px 40px; }
+  h1 { font-size:20px; margin:0 0 12px; display:flex; justify-content:space-between; align-items:center; }
+  #status { font-size:13px; font-weight:400; color:var(--mute); }
+  button, select, input, textarea { font:inherit; color:inherit; }
+  button { background:var(--btn); color:var(--btnfg); border:0; border-radius:10px; padding:12px 14px; font-weight:600; }
+  button:disabled { opacity:.4; }
+  button.ghost { background:none; color:var(--fg); border:1px solid var(--line); }
+  button.on { outline:2px solid var(--fg); outline-offset:-2px; }
+  .row { display:flex; gap:8px; align-items:center; margin:10px 0; }
+  .row > * { flex:1; }
+  label { font-size:13px; color:var(--mute); display:block; }
+  input[type=range] { width:100%; }
+  textarea { width:100%; min-height:90px; padding:10px; border:1px solid var(--line); border-radius:10px; background:none; }
+  select { padding:10px; border:1px solid var(--line); border-radius:10px; background:none; }
+  #paper { background:var(--paper); padding:12px 0; border-radius:4px; margin:14px 0; box-shadow:0 1px 4px #0003; text-align:center; }
+  canvas { width:100%; max-width:384px; image-rendering:pixelated; display:block; margin:0 auto; }
+  #big { width:100%; padding:16px; font-size:18px; }
+  #msg { font-size:13px; color:var(--mute); min-height:1.4em; margin-top:8px; text-align:center; }
+  .hide { display:none !important; }
+  #nobt { border:1px solid var(--line); border-radius:10px; padding:12px; font-size:14px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Thermal Print <span id="status">not connected</span></h1>
+
+  <div id="nobt" class="hide">This browser can't do Bluetooth. On iPhone, open this page in the free <b>Bluefy</b> app. On Android or a computer, use Chrome.</div>
+
+  <div class="row">
+    <button id="connect">Connect printer</button>
+  </div>
+
+  <div class="row">
+    <button class="ghost on" id="tabImg">Image</button>
+    <button class="ghost" id="tabTxt">Text</button>
+  </div>
+
+  <section id="imgPane">
+    <div class="row"><input type="file" id="file" accept="image/*"></div>
+    <div class="row">
+      <select id="mode"><option value="threshold">Line art (sharp)</option><option value="floyd">Photo (dots)</option><option value="comic">Comic (ink + dots)</option></select>
+      <select id="rotate"><option value="0">Upright</option><option value="90">Sideways (bigger)</option></select>
+    </div>
+    <label>Brightness <input type="range" id="bright" min="-80" max="80" value="0"></label>
+    <label id="cutoffLabel">Threshold cutoff <input type="range" id="cutoff" min="0" max="255" value="150"></label>
+  </section>
+
+  <section id="txtPane" class="hide">
+    <textarea id="text" placeholder="Type something to print"></textarea>
+    <div class="row">
+      <label>Size <input type="range" id="size" min="16" max="120" value="40"></label>
+      <select id="align"><option>center</option><option>left</option></select>
+    </div>
+  </section>
+
+  <div id="paper"><canvas id="out" width="384" height="1"></canvas></div>
+
+  <label>Darkness <input type="range" id="dark" min="40" max="255" value="93"></label>
+  <button id="big" disabled>Print</button>
+  <div id="msg"></div>
+</main>
+
+<script>
+// ---------- MXW01 protocol (ported from MXW01-catprinter print.py, MIT) ----------
+const W = 384, WB = 48, MIN_BYTES = 90 * WB;
+// full 128-bit strings: Bluefy on iPhone rejects 16-bit numeric UUIDs
+const U = s => `0000${s}-0000-1000-8000-00805f9b34fb`;
+const SVC = U('ae30'), SVC_ALT = U('af30'), CTRL = U('ae01'), NOTE = U('ae02'), DATA = U('ae03');
+const A1 = 0xa1, A2 = 0xa2, A9 = 0xa9, AA = 0xaa, AD = 0xad;
+
+function crc8(bytes) {          // CRC-8, poly 0x07, init 0, no reflect
+  let c = 0;
+  for (const b of bytes) { c ^= b; for (let i = 0; i < 8; i++) c = c & 0x80 ? ((c << 1) ^ 0x07) & 0xff : (c << 1) & 0xff; }
+  return c;
+}
+function cmd(id, payload) {
+  const p = Uint8Array.from(payload);
+  return Uint8Array.from([0x22, 0x21, id, 0x00, p.length & 0xff, p.length >> 8, ...p, crc8(p), 0xff]);
+}
+// bits: Uint8Array w*h, 1 = black. Rotated 180 (printer feeds bottom first), LSB = leftmost pixel.
+function pack(bits, h) {
+  const buf = new Uint8Array(Math.max(h * WB, MIN_BYTES));
+  for (let y = 0; y < h; y++) {
+    const sy = h - 1 - y;
+    for (let x = 0; x < W; x++) if (bits[sy * W + (W - 1 - x)]) buf[y * WB + (x >> 3)] |= 1 << (x & 7);
+  }
+  return buf;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let dev, ctrl, data, waiters = {};
+
+function onNote(e) {
+  const v = e.target.value, d = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+  if (d.length < 6 || d[0] !== 0x22 || d[1] !== 0x21) return;
+  const len = d[4] | (d[5] << 8), payload = d.slice(6, 6 + len);
+  const w = waiters[d[2]]; if (w) { delete waiters[d[2]]; w(payload); }
+}
+function waitFor(id, secs) {
+  return new Promise((res, rej) => {
+    const t = setTimeout(() => { delete waiters[id]; rej(new Error('printer didn\'t answer')); }, secs * 1000);
+    waiters[id] = p => { clearTimeout(t); res(p); };
+  });
+}
+// Bluefy exposes writeValueWithoutResponse but it can throw; fall back to writeValue once and stick with it
+let noWwr = false;
+async function send(c, bytes) {
+  if (!noWwr && c.writeValueWithoutResponse) {
+    try { return await c.writeValueWithoutResponse(bytes); } catch (e) { noWwr = true; }
+  }
+  return c.writeValue(bytes);
+}
+
+async function connect() {
+  if (!dev) {
+    dev = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [SVC] }, { services: [SVC_ALT] }, { namePrefix: 'MX' }],
+      optionalServices: [SVC, SVC_ALT],
+    });
+    dev.addEventListener('gattserverdisconnected', () => setStatus('disconnected'));
+  }
+  const gatt = await dev.gatt.connect();
+  const svc = await gatt.getPrimaryService(SVC).catch(() => gatt.getPrimaryService(SVC_ALT));
+  ctrl = await svc.getCharacteristic(CTRL);
+  data = await svc.getCharacteristic(DATA);
+  const note = await svc.getCharacteristic(NOTE);
+  await note.startNotifications();
+  note.addEventListener('characteristicvaluechanged', onNote);
+  const st = await getStatus();
+  setStatus(`connected${st.battery != null ? ' · ' + st.battery + '%' : ''}`);
+  return st;
+}
+async function getStatus() {
+  const p = waitFor(A1, 7);
+  await send(ctrl, cmd(A1, [0]));
+  const s = await p;
+  // print.py logs a short status and prints anyway, so don't abort on it
+  const err = s.length >= 13 && s[12] !== 0 ? ({ 1: 'out of paper', 9: 'out of paper', 4: 'too hot, give it a minute', 8: 'battery low' }[s[13]] || 'error ' + s[13]) : null;
+  return { battery: s.length > 9 ? s[9] : null, err };
+}
+async function printBits(bits, h, darkness, progress) {
+  if (!dev || !dev.gatt.connected) await connect();
+  await send(ctrl, cmd(A2, [darkness]));
+  await sleep(100);
+  const st = await getStatus();
+  if (st.err) throw new Error(st.err);
+  const buf = pack(bits, h), lines = buf.length / WB;
+  const ok = waitFor(A9, 7);
+  await send(ctrl, cmd(A9, [lines & 0xff, lines >> 8, 0x30, 0x00]));
+  const r = await ok;
+  if (r[0] !== 0) throw new Error('printer said no (A9 ' + r[0] + ')');
+  for (let i = 0; i < buf.length; i += WB) {
+    await send(data, buf.slice(i, i + WB));
+    await sleep(15);
+    if (i % (WB * 20) === 0) progress(i / buf.length);
+  }
+  const done = waitFor(AA, 15 + lines / 15);
+  await send(ctrl, cmd(AD, [0]));
+  progress(1);
+  await sleep(100);
+  await done.catch(() => {});      // some units never send AA; the print still finishes
+}
+
+// ---------- image -> 1-bit ----------
+const $ = id => document.getElementById(id);
+const out = $('out'), octx = out.getContext('2d');
+let src = null, bits = null, H = 0, tab = 'img';
+
+function toBits(gray, h, mode) {
+  const b = new Uint8Array(W * h);
+  if (mode === 'threshold') { const cutoff = +$('cutoff').value; for (let i = 0; i < b.length; i++) b[i] = gray[i] < cutoff ? 1 : 0; return b; }
+  const g = Float32Array.from(gray);
+  let ink = null;
+  if (mode === 'comic') {
+    const sorted = Array.from(g).sort((a, z) => a - z), lo = sorted[Math.floor(g.length * .01)], hi = sorted[Math.min(g.length - 1, Math.floor(g.length * .99))];
+    for (let i = 0; i < g.length; i++) g[i] = 255 * Math.pow(Math.max(0, Math.min(1, (g[i] - lo) / (hi - lo || 1))), .6);
+    const stride = W + 1, sums = new Float64Array(stride * (h + 1));
+    for (let y = 0; y < h; y++) { let row = 0; for (let x = 0; x < W; x++) { row += g[y * W + x]; sums[(y + 1) * stride + x + 1] = sums[y * stride + x + 1] + row; } }
+    ink = new Uint8Array(g.length);
+    for (let y = 0; y < h; y++) for (let x = 0; x < W; x++) {
+      const x0 = Math.max(0, x - 7), x1 = Math.min(W, x + 8), y0 = Math.max(0, y - 7), y1 = Math.min(h, y + 8);
+      const sum = sums[y1 * stride + x1] - sums[y0 * stride + x1] - sums[y1 * stride + x0] + sums[y0 * stride + x0];
+      ink[y * W + x] = g[y * W + x] < sum / ((x1 - x0) * (y1 - y0)) - 14;
+    }
+  }
+  // Floyd–Steinberg error diffusion, also used beneath comic ink lines.
+  for (let y = 0; y < h; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, o = g[i], n = o < 128 ? 0 : 255, e = o - n;
+    b[i] = (n ? 0 : 1) || (ink && ink[i] ? 1 : 0);
+    if (x + 1 < W) g[i + 1] += e * 7 / 16;
+    if (y + 1 < h) { if (x) g[i + W - 1] += e * 3 / 16; g[i + W] += e * 5 / 16; if (x + 1 < W) g[i + W + 1] += e / 16; }
+  }
+  return b;
+}
+function grayOf(canvas) {
+  const d = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data, g = new Float32Array(d.length / 4), comic = $('mode').value === 'comic';
+  for (let i = 0; i < g.length; i++) g[i] = comic ? 0.45 * d[i * 4] + 0.40 * d[i * 4 + 1] + 0.15 * d[i * 4 + 2] : 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  return g;
+}
+function renderImage() {
+  if (!src) return null;
+  const rot = $('rotate').value === '90';
+  const sw = rot ? src.height : src.width, sh = rot ? src.width : src.height;
+  const h = Math.max(1, Math.round(sh * W / sw));
+  const c = Object.assign(document.createElement('canvas'), { width: W, height: h }), x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, W, h);   // transparency goes white
+  x.translate(W / 2, h / 2); if (rot) x.rotate(Math.PI / 2);
+  const dw = rot ? h : W, dh = rot ? W : h;
+  x.drawImage(src, -dw / 2, -dh / 2, dw, dh);
+  const g = grayOf(c), br = +$('bright').value;
+  for (let i = 0; i < g.length; i++) g[i] = Math.min(255, Math.max(0, g[i] + br));
+  return [toBits(g, h, $('mode').value), h];
+}
+function wrap(ctx, text, max) {
+  const lines = [];
+  for (const para of text.split('\n')) {
+    let line = '';
+    for (const word of para.split(' ')) {
+      const t = line ? line + ' ' + word : word;
+      if (ctx.measureText(t).width > max && line) { lines.push(line); line = word; } else line = t;
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+function renderText() {
+  const t = $('text').value.trim(); if (!t) return null;
+  const size = +$('size').value, font = `800 ${size}px -apple-system, system-ui, sans-serif`, pad = 8, lh = Math.round(size * 1.2);
+  const m = document.createElement('canvas').getContext('2d'); m.font = font;
+  const lines = wrap(m, t, W - pad * 2), h = lines.length * lh + pad * 2;
+  const c = Object.assign(document.createElement('canvas'), { width: W, height: h }), x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, W, h); x.fillStyle = '#000'; x.font = font; x.textBaseline = 'top';
+  const center = $('align').value === 'center'; x.textAlign = center ? 'center' : 'left';
+  lines.forEach((l, i) => x.fillText(l, center ? W / 2 : pad, pad + i * lh + (lh - size) / 2));
+  return [toBits(grayOf(c), h, 'threshold'), h];
+}
+function redraw() {
+  const r = tab === 'img' ? renderImage() : renderText();
+  [bits, H] = r || [null, 0];
+  out.height = H || 1;
+  const img = octx.createImageData(W, out.height);
+  for (let i = 0; i < W * out.height; i++) { const v = bits && bits[i] ? 0 : 255; img.data.set([v, v, v, 255], i * 4); }
+  octx.putImageData(img, 0, 0);
+  $('big').disabled = !bits;
+  $('big').textContent = bits ? `Print · ${Math.round(H / 8)}mm` : 'Print';
+}
+function setStatus(s) { $('status').textContent = s; }
+function say(s) { $('msg').textContent = s; }
+
+// ---------- wiring ----------
+if (!navigator.bluetooth) { $('nobt').classList.remove('hide'); $('connect').disabled = true; }
+$('connect').onclick = async () => {
+  try { say('connecting...'); const st = await connect(); say(st.err ? 'printer says: ' + st.err : 'ready'); }
+  catch (e) { say(e.name === 'NotFoundError' ? '' : 'connect failed: ' + e.message); }
+};
+$('file').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const im = new Image();
+  im.onload = () => { src = im; redraw(); };
+  im.onerror = () => say('couldn\'t read that image');
+  im.src = URL.createObjectURL(f);
+};
+for (const id of ['mode', 'rotate', 'bright', 'cutoff', 'text', 'size', 'align']) $(id).addEventListener('input', redraw);
+$('mode').addEventListener('change', () => $('cutoffLabel').classList.toggle('hide', $('mode').value !== 'threshold'));
+for (const [btn, t] of [['tabImg', 'img'], ['tabTxt', 'txt']]) $(btn).onclick = () => {
+  tab = t; $('tabImg').classList.toggle('on', t === 'img'); $('tabTxt').classList.toggle('on', t === 'txt');
+  $('imgPane').classList.toggle('hide', t !== 'img'); $('txtPane').classList.toggle('hide', t !== 'txt'); redraw();
+};
+$('big').onclick = async () => {
+  if (!bits) return;
+  $('big').disabled = true;
+  try { await printBits(bits, H, +$('dark').value, p => say(`printing ${Math.round(p * 100)}%`)); say('done'); }
+  catch (e) { say('print failed: ' + e.message); }
+  $('big').disabled = false;
+};
+</script>
+</body>
+</html>
