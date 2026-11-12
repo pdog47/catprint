@@ -1,77 +1,15 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Thermal Print</title>
-<meta name="theme-color" content="#111">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#f2f2f7"><title>Print</title>
 <style>
-  :root { --bg:#fff; --fg:#111; --mute:#777; --line:#ddd; --btn:#111; --btnfg:#fff; --paper:#fff; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#111; --fg:#eee; --mute:#999; --line:#333; --btn:#eee; --btnfg:#111; } }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, system-ui, sans-serif; }
-  main { max-width:440px; margin:0 auto; padding:16px 16px 40px; }
-  h1 { font-size:20px; margin:0 0 12px; display:flex; justify-content:space-between; align-items:center; }
-  #status { font-size:13px; font-weight:400; color:var(--mute); }
-  button, select, input, textarea { font:inherit; color:inherit; }
-  button { background:var(--btn); color:var(--btnfg); border:0; border-radius:10px; padding:12px 14px; font-weight:600; }
-  button:disabled { opacity:.4; }
-  button.ghost { background:none; color:var(--fg); border:1px solid var(--line); }
-  button.on { outline:2px solid var(--fg); outline-offset:-2px; }
-  .row { display:flex; gap:8px; align-items:center; margin:10px 0; }
-  .row > * { flex:1; }
-  label { font-size:13px; color:var(--mute); display:block; }
-  input[type=range] { width:100%; }
-  textarea { width:100%; min-height:90px; padding:10px; border:1px solid var(--line); border-radius:10px; background:none; }
-  select { padding:10px; border:1px solid var(--line); border-radius:10px; background:none; }
-  #paper { background:var(--paper); padding:12px 0; border-radius:4px; margin:14px 0; box-shadow:0 1px 4px #0003; text-align:center; }
-  canvas { width:100%; max-width:384px; image-rendering:pixelated; display:block; margin:0 auto; }
-  #big { width:100%; padding:16px; font-size:18px; }
-  #msg { font-size:13px; color:var(--mute); min-height:1.4em; margin-top:8px; text-align:center; }
-  .hide { display:none !important; }
-  #nobt { border:1px solid var(--line); border-radius:10px; padding:12px; font-size:14px; margin-bottom:12px; }
-</style>
-</head>
-<body>
-<main>
-  <h1>Thermal Print <span id="status">not connected</span></h1>
-
-  <div id="nobt" class="hide">This browser can't do Bluetooth. On iPhone, open this page in the free <b>Bluefy</b> app. On Android or a computer, use Chrome.</div>
-
-  <div class="row">
-    <button id="connect">Connect printer</button>
-  </div>
-
-  <div class="row">
-    <button class="ghost on" id="tabImg">Image</button>
-    <button class="ghost" id="tabTxt">Text</button>
-  </div>
-
-  <section id="imgPane">
-    <div class="row"><input type="file" id="file" accept="image/*"></div>
-    <div class="row">
-      <select id="mode"><option value="threshold">Line art (sharp)</option><option value="floyd">Photo (dots)</option><option value="comic">Comic (ink + dots)</option></select>
-      <select id="rotate"><option value="0">Upright</option><option value="90">Sideways (bigger)</option></select>
-    </div>
-    <label>Brightness <input type="range" id="bright" min="-80" max="80" value="0"></label>
-    <label id="cutoffLabel">Threshold cutoff <input type="range" id="cutoff" min="0" max="255" value="150"></label>
-  </section>
-
-  <section id="txtPane" class="hide">
-    <textarea id="text" placeholder="Type something to print"></textarea>
-    <div class="row">
-      <label>Size <input type="range" id="size" min="16" max="120" value="40"></label>
-      <select id="align"><option>center</option><option>left</option></select>
-    </div>
-  </section>
-
-  <div id="paper"><canvas id="out" width="384" height="1"></canvas></div>
-
-  <label>Darkness <input type="range" id="dark" min="40" max="255" value="93"></label>
-  <button id="big" disabled>Print</button>
-  <div id="msg"></div>
-</main>
-
+:root{color-scheme:light dark;--bg:#f2f2f7;--card:#fff;--fg:#111;--muted:#8e8e93;--line:#c6c6c8;--blue:#0a84ff;--paper:#fff} @media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--fg:#f5f5f7;--muted:#8e8e93;--line:#38383a;--seg:#2c2c2e;--segon:#636366}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}main{max-width:520px;margin:auto;padding:14px 16px 116px}h1{font-size:34px;line-height:1.12;font-weight:750;margin:14px 2px 20px;display:flex;align-items:center;justify-content:space-between}.pill{border:0;font:inherit;font-size:13px;font-weight:600;border-radius:20px;padding:7px 11px;background:#e5e5ea;color:#666}.pill.connected{background:#e4f7e9;color:#248a3d}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#34c759;margin-right:5px} @media(prefers-color-scheme:dark){.pill{background:#2c2c2e;color:#aaa}.pill.connected{background:#173b24;color:#55d66b}}
+.card{background:var(--card);border-radius:12px;margin:12px 0;overflow:hidden}.row{min-height:48px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.label{font-size:16px}.seg{display:flex;background:var(--seg,#e5e5ea);border-radius:9px;padding:2px;gap:2px}.seg button{background:transparent;color:var(--fg);border:0;border-radius:7px;padding:7px 14px;font-size:15px;min-height:34px}.seg button.on{background:var(--segon,var(--card));box-shadow:0 1px 3px #0003;font-weight:600}button{font:inherit;cursor:pointer}.range{width:150px;accent-color:var(--blue)}input,textarea,select{font-size:16px}.switch{appearance:none;width:51px;height:31px;border-radius:20px;background:#e5e5ea;position:relative;margin:0;transition:.15s}.switch:after{content:"";position:absolute;inset:2px auto 2px 2px;width:27px;background:white;border-radius:50%;box-shadow:0 1px 3px #0003;transition:.15s}.switch:checked{background:#34c759}.switch:checked:after{left:22px}#file{display:none}.choose{width:100%;min-height:150px;background:var(--card);color:var(--blue);border:0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-weight:600}.choose svg{width:38px;height:38px;stroke:currentColor;fill:none;stroke-width:1.8}.preview{padding:16px 12px 22px;background:var(--card);border-radius:12px;position:relative}.paper{background:#fff;padding:12px 0 16px;box-shadow:0 3px 12px #0002;position:relative}.paper:after{content:"";position:absolute;bottom:-6px;left:0;right:0;height:7px;background:linear-gradient(135deg,#fff 50%,transparent 50%) 0 0/10px 10px,linear-gradient(225deg,#fff 50%,transparent 50%) 0 0/10px 10px}.paper canvas{width:100%;display:block;image-rendering:pixelated}.preview.empty{display:none}textarea{width:100%;min-height:100px;border:0;outline:0;resize:vertical;background:transparent;padding:14px}.small{color:var(--muted);font-size:13px;padding:0 16px}.hide{display:none!important}.sticky{position:fixed;z-index:3;bottom:0;left:0;right:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(18px)}#big{width:100%;height:50px;border:0;border-radius:14px;background:var(--blue);color:white;font-weight:650;font-size:17px;position:relative;overflow:hidden}#big:disabled{opacity:.42}.fill{position:absolute;inset:0 auto 0 0;width:0;background:#0066cc;transition:width .2s}#big span{position:relative}#msg{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:9px 15px;border-radius:20px;font-size:13px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}#msg.show{opacity:1}#nobt{padding:12px;color:var(--muted);font-size:14px}
+</style></head><body><main><h1>Print <button id="status" class="pill">Connect</button></h1><div id="nobt" class="hide">Bluetooth is unavailable. Open this page in Bluefy.</div>
+<div class="card"><div class="row"><span class="label">Darkness</span><input class="range" type="range" id="dark" min="40" max="255" value="93"></div></div>
+<div class="seg" style="width:100%;margin:14px 0"><button id="tabImg" class="on" style="flex:1">Photo</button><button id="tabTxt" style="flex:1">Text</button></div>
+<section id="imgPane"><button id="choose" class="choose"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Choose photo</span></button><input type="file" id="file" accept="image/*"><div id="imageControls" class="card hide"><div class="row"><span class="label">Trim borders</span><input id="trim" class="switch" type="checkbox" checked></div><div class="row"><span class="label">Sideways when wide</span><input id="rotate" class="switch" type="checkbox" checked></div><div class="row"><span class="label">Image mode</span><div class="seg"><button data-mode="photo" class="on">Photo</button><button data-mode="bold">Bold</button><button data-mode="comic">Comic</button></div></div><div class="row"><span class="label">Brightness</span><input class="range" type="range" id="bright" min="-80" max="80" value="0"></div></div></section>
+<section id="txtPane" class="card hide"><textarea id="text" placeholder="Type something to print"></textarea><div class="row"><span class="label">Size</span><input class="range" type="range" id="size" min="16" max="120" value="40"></div><div class="row"><span class="label">Align</span><select id="align"><option>center</option><option>left</option></select></div></section>
+<div id="preview" class="preview empty"><div class="paper"><canvas id="out" width="384" height="1"></canvas></div><div class="small" id="previewHint">Tap preview to see original</div></div></main><div class="sticky"><div id="msg"></div><button id="big" disabled><i class="fill"></i><span>Print</span></button></div>
 <script>
 // ---------- MXW01 protocol (ported from MXW01-catprinter print.py, MIT) ----------
 const W = 384, WB = 48, MIN_BYTES = 90 * WB;
@@ -174,13 +112,71 @@ async function printBits(bits, h, darkness, progress) {
 }
 
 // ---------- image -> 1-bit ----------
-const $ = id => document.getElementById(id);
-const out = $('out'), octx = out.getContext('2d');
-let src = null, bits = null, H = 0, tab = 'img';
+const $ = id => document.getElementById(id), out=$('out'), octx=out.getContext('2d');
+// ---- image pipeline: gray Float32Array (0..255), W x h ----
+function cropBox(c) { // trim flat borders (letterbox bars, white margins) like thermal_convert crop_tight
+  const { width: w, height: h } = c, d = c.getContext('2d').getImageData(0, 0, w, h).data;
+  const lum = i => (d[i * 4] * 3 + d[i * 4 + 1] * 6 + d[i * 4 + 2]) / 10;
+  const bg = lum(0), tol = 24;
+  const rowFlat = y => { let n = 0; for (let x = 0; x < w; x += 2) if (Math.abs(lum(y * w + x) - bg) > tol) n++; return n < w / 2 * 0.01; };
+  const colFlat = x => { let n = 0; for (let y = 0; y < h; y += 2) if (Math.abs(lum(y * w + x) - bg) > tol) n++; return n < h / 2 * 0.01; };
+  let t = 0, b = h - 1, l = 0, r = w - 1;
+  while (t < b && rowFlat(t)) t++; while (b > t && rowFlat(b)) b--;
+  while (l < r && colFlat(l)) l++; while (r > l && colFlat(r)) r--;
+  return (r - l < w * 0.2 || b - t < h * 0.2) ? [0, 0, w, h] : [l, t, r - l + 1, b - t + 1];
+}
+function autoTone(g, amount) { // stretch 1-99% + blend in histogram equalization, lifts dark scenes
+  const hist = new Uint32Array(256); for (const v of g) hist[v | 0]++;
+  const n = g.length, cdf = new Float32Array(256); let s = 0;
+  for (let i = 0; i < 256; i++) { s += hist[i]; cdf[i] = s / n; }
+  let lo = 0, hi = 255; while (cdf[lo] < 0.01) lo++; while (hi > 0 && cdf[hi - 1] > 0.99) hi--;
+  for (let i = 0; i < n; i++) {
+    const v = g[i] | 0, st = Math.max(0, Math.min(255, (v - lo) * 255 / Math.max(1, hi - lo)));
+    g[i] = st * (1 - amount) + cdf[v] * 255 * amount;
+  }
+}
+function blur(g, w, h, r) { // box blur via integral image
+  const S = new Float64Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) { let row = 0; for (let x = 0; x < w; x++) { row += g[y * w + x]; S[(y + 1) * (w + 1) + x + 1] = S[y * (w + 1) + x + 1] + row; } }
+  const o = new Float32Array(g.length);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+    o[y * w + x] = (S[y1 * (w + 1) + x1] - S[y0 * (w + 1) + x1] - S[y1 * (w + 1) + x0] + S[y0 * (w + 1) + x0]) / ((x1 - x0) * (y1 - y0));
+  }
+  return o;
+}
+function sharpen(g, w, h, r, amt) { const b = blur(g, w, h, r); for (let i = 0; i < g.length; i++) g[i] = Math.max(0, Math.min(255, g[i] + (g[i] - b[i]) * amt)); }
+function otsu(g) {
+  const hist = new Float64Array(256); for (const v of g) hist[Math.max(0, Math.min(255, v | 0))]++;
+  let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let wB = 0, sB = 0, best = 0, t = 128;
+  for (let i = 0; i < 256; i++) { wB += hist[i]; if (!wB) continue; const wF = g.length - wB; if (!wF) break; sB += i * hist[i];
+    const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > best) { best = v; t = i; } }
+  return t;
+}
+function atkinson(g, w, h) { // keeps highlights clean and contrast high, less mud than Floyd-Steinberg on thermal paper
+  const b = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, n = g[i] < 128 ? 0 : 255, e = (g[i] - n) / 8; b[i] = n ? 0 : 1;
+    if (x + 1 < w) g[i + 1] += e; if (x + 2 < w) g[i + 2] += e;
+    if (y + 1 < h) { if (x) g[i + w - 1] += e; g[i + w] += e; if (x + 1 < w) g[i + w + 1] += e; }
+    if (y + 2 < h) g[i + 2 * w] += e;
+  }
+  return b;
+}
+function process(g, w, h, mode, bright) {
+  if (mode !== 'text') autoTone(g, mode === 'bold' ? 0.7 : 0.5);
+  if (bright) for (let i = 0; i < g.length; i++) g[i] = Math.max(0, Math.min(255, g[i] + bright));
+  if (mode === 'photo') { sharpen(g, w, h, 2, 0.8); for (let i = 0; i < g.length; i++) g[i] = 255 * Math.pow(g[i] / 255, 0.8); return atkinson(g, w, h); }
+  if (mode === 'bold') sharpen(g, w, h, 3, 0.6);
+  const t = mode === 'text' ? 128 : otsu(g), b = new Uint8Array(w * h);
+  for (let i = 0; i < b.length; i++) b[i] = g[i] < t ? 1 : 0;
+  return b;
+}
 
-function toBits(gray, h, mode) {
+let src=null,bits=null,H=0,tab='img',mode='photo',showOriginal=false;
+function comicBits(gray, h) {
   const b = new Uint8Array(W * h);
-  if (mode === 'threshold') { const cutoff = +$('cutoff').value; for (let i = 0; i < b.length; i++) b[i] = gray[i] < cutoff ? 1 : 0; return b; }
   const g = Float32Array.from(gray);
   let ink = null;
   if (mode === 'comic') {
@@ -195,7 +191,7 @@ function toBits(gray, h, mode) {
       ink[y * W + x] = g[y * W + x] < sum / ((x1 - x0) * (y1 - y0)) - 14;
     }
   }
-  // Floyd–Steinberg error diffusion, also used beneath comic ink lines.
+  // Floyd-Steinberg error diffusion, also used beneath comic ink lines.
   for (let y = 0; y < h; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x, o = g[i], n = o < 128 ? 0 : 255, e = o - n;
     b[i] = (n ? 0 : 1) || (ink && ink[i] ? 1 : 0);
@@ -204,87 +200,16 @@ function toBits(gray, h, mode) {
   }
   return b;
 }
-function grayOf(canvas) {
-  const d = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data, g = new Float32Array(d.length / 4), comic = $('mode').value === 'comic';
-  for (let i = 0; i < g.length; i++) g[i] = comic ? 0.45 * d[i * 4] + 0.40 * d[i * 4 + 1] + 0.15 * d[i * 4 + 2] : 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
-  return g;
-}
-function renderImage() {
-  if (!src) return null;
-  const rot = $('rotate').value === '90';
-  const sw = rot ? src.height : src.width, sh = rot ? src.width : src.height;
-  const h = Math.max(1, Math.round(sh * W / sw));
-  const c = Object.assign(document.createElement('canvas'), { width: W, height: h }), x = c.getContext('2d');
-  x.fillStyle = '#fff'; x.fillRect(0, 0, W, h);   // transparency goes white
-  x.translate(W / 2, h / 2); if (rot) x.rotate(Math.PI / 2);
-  const dw = rot ? h : W, dh = rot ? W : h;
-  x.drawImage(src, -dw / 2, -dh / 2, dw, dh);
-  const g = grayOf(c), br = +$('bright').value;
-  for (let i = 0; i < g.length; i++) g[i] = Math.min(255, Math.max(0, g[i] + br));
-  return [toBits(g, h, $('mode').value), h];
-}
-function wrap(ctx, text, max) {
-  const lines = [];
-  for (const para of text.split('\n')) {
-    let line = '';
-    for (const word of para.split(' ')) {
-      const t = line ? line + ' ' + word : word;
-      if (ctx.measureText(t).width > max && line) { lines.push(line); line = word; } else line = t;
-    }
-    lines.push(line);
-  }
-  return lines;
-}
-function renderText() {
-  const t = $('text').value.trim(); if (!t) return null;
-  const size = +$('size').value, font = `800 ${size}px -apple-system, system-ui, sans-serif`, pad = 8, lh = Math.round(size * 1.2);
-  const m = document.createElement('canvas').getContext('2d'); m.font = font;
-  const lines = wrap(m, t, W - pad * 2), h = lines.length * lh + pad * 2;
-  const c = Object.assign(document.createElement('canvas'), { width: W, height: h }), x = c.getContext('2d');
-  x.fillStyle = '#fff'; x.fillRect(0, 0, W, h); x.fillStyle = '#000'; x.font = font; x.textBaseline = 'top';
-  const center = $('align').value === 'center'; x.textAlign = center ? 'center' : 'left';
-  lines.forEach((l, i) => x.fillText(l, center ? W / 2 : pad, pad + i * lh + (lh - size) / 2));
-  return [toBits(grayOf(c), h, 'threshold'), h];
-}
-function redraw() {
-  const r = tab === 'img' ? renderImage() : renderText();
-  [bits, H] = r || [null, 0];
-  out.height = H || 1;
-  const img = octx.createImageData(W, out.height);
-  for (let i = 0; i < W * out.height; i++) { const v = bits && bits[i] ? 0 : 255; img.data.set([v, v, v, 255], i * 4); }
-  octx.putImageData(img, 0, 0);
-  $('big').disabled = !bits;
-  $('big').textContent = bits ? `Print · ${Math.round(H / 8)}mm` : 'Print';
-}
-function setStatus(s) { $('status').textContent = s; }
-function say(s) { $('msg').textContent = s; }
-
-// ---------- wiring ----------
-if (!navigator.bluetooth) { $('nobt').classList.remove('hide'); $('connect').disabled = true; }
-$('connect').onclick = async () => {
-  try { say('connecting...'); const st = await connect(); say(st.err ? 'printer says: ' + st.err : 'ready'); }
-  catch (e) { say(e.name === 'NotFoundError' ? '' : 'connect failed: ' + e.message); }
-};
-$('file').onchange = e => {
-  const f = e.target.files[0]; if (!f) return;
-  const im = new Image();
-  im.onload = () => { src = im; redraw(); };
-  im.onerror = () => say('couldn\'t read that image');
-  im.src = URL.createObjectURL(f);
-};
-for (const id of ['mode', 'rotate', 'bright', 'cutoff', 'text', 'size', 'align']) $(id).addEventListener('input', redraw);
-$('mode').addEventListener('change', () => $('cutoffLabel').classList.toggle('hide', $('mode').value !== 'threshold'));
-for (const [btn, t] of [['tabImg', 'img'], ['tabTxt', 'txt']]) $(btn).onclick = () => {
-  tab = t; $('tabImg').classList.toggle('on', t === 'img'); $('tabTxt').classList.toggle('on', t === 'txt');
-  $('imgPane').classList.toggle('hide', t !== 'img'); $('txtPane').classList.toggle('hide', t !== 'txt'); redraw();
-};
-$('big').onclick = async () => {
-  if (!bits) return;
-  $('big').disabled = true;
-  try { await printBits(bits, H, +$('dark').value, p => say(`printing ${Math.round(p * 100)}%`)); say('done'); }
-  catch (e) { say('print failed: ' + e.message); }
-  $('big').disabled = false;
-};
-</script>
-</body>
-</html>
+function wrap(ctx,text,max){const lines=[];for(const para of text.split('\n')){let line='';for(const word of para.split(' ')){const t=line?line+' '+word:word;if(ctx.measureText(t).width>max&&line){lines.push(line);line=word}else line=t}lines.push(line)}return lines}
+function grayOf(c){const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,g=new Float32Array(d.length/4);for(let i=0;i<g.length;i++)g[i]=.3*d[i*4]+.59*d[i*4+1]+.11*d[i*4+2];return g}
+function renderImage(){if(!src)return null;const base=Object.assign(document.createElement('canvas'),{width:src.width,height:src.height}),bx=base.getContext('2d');bx.fillStyle='#fff';bx.fillRect(0,0,base.width,base.height);bx.drawImage(src,0,0);const box=$('trim').checked?cropBox(base):[0,0,base.width,base.height],[cx,cy,cw,ch]=box,rot=$('rotate').checked&&cw>ch,sw=rot?ch:cw,sh=rot?cw:ch,h=Math.max(1,Math.round(sh*W/sw)),c=Object.assign(document.createElement('canvas'),{width:W,height:h}),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,h);x.translate(W/2,h/2);if(rot)x.rotate(Math.PI/2);const dw=rot?h:W,dh=rot?W:h;x.drawImage(base,cx,cy,cw,ch,-dw/2,-dh/2,dw,dh);const g=grayOf(c),br=+$('bright').value;if(mode==='comic'&&br)for(let i=0;i<g.length;i++)g[i]=Math.max(0,Math.min(255,g[i]+br));const b=mode==='comic'?comicBits(g,h):process(g,W,h,mode,br);return[b,h]}
+function renderText(){const t=$('text').value.trim();if(!t)return null;const size=+$('size').value,font=`800 ${size}px -apple-system, BlinkMacSystemFont, sans-serif`,pad=8,lh=Math.round(size*1.2),m=document.createElement('canvas').getContext('2d');m.font=font;const lines=wrap(m,t,W-pad*2),h=lines.length*lh+pad*2,c=Object.assign(document.createElement('canvas'),{width:W,height:h}),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,h);x.fillStyle='#000';x.font=font;x.textBaseline='top';const center=$('align').value==='center';x.textAlign=center?'center':'left';lines.forEach((l,i)=>x.fillText(l,center?W/2:pad,pad+i*lh+(lh-size)/2));return[process(grayOf(c),W,h,'text',0),h]}
+function redraw(){const r=tab==='img'?renderImage():renderText();[bits,H]=r||[null,0];out.height=H||1;const img=octx.createImageData(W,out.height);for(let i=0;i<W*out.height;i++){const v=bits&&bits[i]?0:255;img.data.set([v,v,v,255],i*4)}octx.putImageData(img,0,0);$('big').disabled=!bits;$('big').querySelector('span').textContent=bits?`Print · ${Math.round(H/8)}mm`:'Print';$('preview').classList.toggle('empty',!bits);$('imageControls').classList.toggle('hide',!src);$('choose').classList.toggle('hide',!!src||tab!=='img')}
+function setStatus(s){const e=$('status');e.classList.toggle('connected',s.startsWith('connected'));e.innerHTML=s.startsWith('connected')?`<i class="dot"></i>Connected${s.includes('%')?' · '+s.split('·').pop().trim():''}`:'Connect'}function say(s){const e=$('msg');e.textContent=s;e.classList.toggle('show',!!s);clearTimeout(window.msgTimer);if(s)window.msgTimer=setTimeout(()=>e.classList.remove('show'),2800)}
+if(!navigator.bluetooth){$('nobt').classList.remove('hide');$('status').disabled=true}
+$('status').onclick=async()=>{try{const st=await connect();say(st.err||'Ready')}catch(e){say(e.name==='NotFoundError'?'':'Connect failed: '+e.message)}};$('choose').onclick=()=>$('file').click();$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{src=im;showOriginal=false;redraw();URL.revokeObjectURL(im.src)};im.onerror=()=>say('Could not read that image');im.src=URL.createObjectURL(f)};
+for(const id of ['trim','rotate','bright','text','size','align'])$(id).addEventListener('input',redraw);for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));redraw()};for(const [btn,t]of[['tabImg','img'],['tabTxt','txt']])$(btn).onclick=()=>{tab=t;$(btn).classList.add('on');$((t==='img'?'tabTxt':'tabImg')).classList.remove('on');$('imgPane').classList.toggle('hide',t!=='img');$('txtPane').classList.toggle('hide',t!=='txt');redraw()};
+$('preview').onclick=()=>{if(!bits||!src)return;showOriginal=!showOriginal;if(showOriginal){const ctx=out.getContext('2d');out.width=src.width;out.height=src.height;ctx.drawImage(src,0,0);out.style.imageRendering='auto'}else{out.width=W;out.height=H;redraw();out.style.imageRendering='pixelated'}};
+$('big').onclick=async()=>{if(!bits)return;const button=$('big');button.disabled=true;button.querySelector('span').textContent='Printing… 0%';try{await printBits(bits,H,+$('dark').value,p=>{button.querySelector('span').textContent=`Printing… ${Math.round(p*100)}%`;button.querySelector('.fill').style.width=(p*100)+'%'});say('Done')}catch(e){say('Print failed: '+e.message)}button.querySelector('.fill').style.width='0';button.disabled=!bits;button.querySelector('span').textContent=`Print · ${Math.round(H/8)}mm`};
+$('preview').addEventListener('paste',e=>{const f=[...e.clipboardData.files].find(x=>x.type.startsWith('image/'));if(f){$('file').files;const im=new Image();im.onload=()=>{src=im;redraw()};im.src=URL.createObjectURL(f)}});document.addEventListener('paste',e=>{const f=[...e.clipboardData.files].find(x=>x.type.startsWith('image/'));if(f){const im=new Image();im.onload=()=>{src=im;tab='img';redraw()};im.src=URL.createObjectURL(f)}});redraw();
+</script></body></html>

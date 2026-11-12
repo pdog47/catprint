@@ -11,7 +11,7 @@ open it: https://pdog47.github.io/catprint/
 
 ## what it does
 
-- photos in three modes: line art (sharp threshold), photo (dots), comic (ink lines over dots)
+- photos auto-cleaned (trims black bars, lifts dark scenes, sharpens) then printed as photo (dots), bold (solid black and white) or comic (ink lines over dots)
 - typed text with size and alignment
 - darkness slider, battery level, paper and overheat warnings
 
