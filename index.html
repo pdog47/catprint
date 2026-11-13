@@ -147,17 +147,25 @@ async function printLevels(levels, h, darkness, progress) {
   await send(ctrl, cmd(A9, [lines & 0xff, lines >> 8, 0x30, 0x02]));
   const r = await ok;
   if (r[0] !== 0) throw new Error('printer said no to HD (A9 ' + r[0] + ')');
-  for (let i = 0; i < buf.length; i += 48) {
-    await send(data, buf.slice(i, i + 48));
-    await sleep(15);
+  // HD is 4x the data of a 1-bit print and Bluefy gives no backpressure on write-without-response,
+  // so 48B/15ms overran the printer (prints stopped about a third in). Prefer acked writes on AE03;
+  // otherwise pace much slower with a breather every 20 chunks.
+  const acked = !!(data.properties && data.properties.write && data.writeValueWithResponse);
+  const t0 = Date.now();
+  for (let i = 0, n = 0; i < buf.length; i += 48, n++) {
+    const chunk = buf.slice(i, i + 48);
+    if (acked) await data.writeValueWithResponse(chunk);
+    else { await send(data, chunk); await sleep(40); if (n % 20 === 19) await sleep(150); }
     if (i % (48 * 40) === 0) progress(i / buf.length);
   }
-  const done = waitFor(AA, 15 + lines / 8);
+  hdLastSend = `HD sent ${Math.round(buf.length / 1024)} KB in ${((Date.now() - t0) / 1000).toFixed(1)} s (${acked ? 'acked' : 'paced'})`;
+  const done = waitFor(AA, 30 + lines / 4);
   await send(ctrl, cmd(AD, [0]));
   progress(1);
   await sleep(100);
   await done.catch(() => {});
 }
+let hdLastSend = '';
 
 // Calibration strip: 16 labeled bands, 0 (white) to 15 (black). Print it, photo it, and we tune gamma.
 function hdTestStrip() {
@@ -278,7 +286,7 @@ function drawJob(){const j=job;$('txtPane').classList.toggle('hide',active!=='te
 function redraw(){job=active==='photo'||active==='feedgray'?renderImageJob():active==='text'?renderTextJob():active==='feedbits'?job:null;drawJob()}
 // battery for the pill only (never part of a print): AB first, then A1 byte 9, each only if 1-100.
 let lastRaw='';const hex=u=>u?[...u].map(x=>x.toString(16).padStart(2,'0')).join(' '):'none';
-async function battery(){let a=null,b=null;try{const p=waitFor(0xab,2);await send(ctrl,cmd(0xab,[0]));b=await p}catch(e){}try{const p=waitFor(A1,3);await send(ctrl,cmd(A1,[0]));a=await p}catch(e){}lastRaw='A1: '+hex(a)+' | AB: '+hex(b);const ok=v=>v>0&&v<=100;const v=b&&ok(b[0])?b[0]:a&&ok(a[9])?a[9]:null;setStatus('connected'+(v!=null?' ? '+v+'%':''));return v}
+async function battery(){let a=null,b=null;try{const p=waitFor(0xab,2);await send(ctrl,cmd(0xab,[0]));b=await p}catch(e){}try{const p=waitFor(A1,3);await send(ctrl,cmd(A1,[0]));a=await p}catch(e){}lastRaw='A1: '+hex(a)+' | AB: '+hex(b)+' | AE03 write:'+!!(data&&data.properties&&data.properties.write)+' noResp:'+!!(data&&data.properties&&data.properties.writeWithoutResponse)+(hdLastSend?' | '+hdLastSend:'');const ok=v=>v>0&&v<=100;const v=b&&ok(b[0])?b[0]:a&&ok(a[9])?a[9]:null;setStatus('connected'+(v!=null?' ? '+v+'%':''));return v}
 function setStatus(s){const e=$('status');e.classList.toggle('connected',s.startsWith('connected'));e.innerHTML=s.startsWith('connected')?`<i class="dot"></i>Connected${s.includes('%')?' ? '+s.split('?').pop().trim():''}`:'Connect'}function say(s){const e=$('msg');e.textContent=s;e.classList.toggle('show',!!s);clearTimeout(window.msgTimer);if(s)window.msgTimer=setTimeout(()=>e.classList.remove('show'),2800)}
 function feedSettings(){try{return{repo:localStorage.getItem('feedRepo')||'',token:localStorage.getItem('feedToken')||''}}catch(e){return{repo:'',token:''}}}
 function feedHeaders(){return{Authorization:'Bearer '+(tokenValue().replace(/\s/g,'')),Accept:'application/vnd.github.raw'}}
