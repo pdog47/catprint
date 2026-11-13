@@ -11,7 +11,8 @@ open it: https://pdog47.github.io/catprint/
 
 ## what it does
 
-- photos auto-cleaned (trims black bars, lifts dark scenes, sharpens) then printed as photo (dots), bold (solid black and white) or comic (ink lines over dots)
+- photos in HD (the printer's 16-shade grayscale mode) or 1-bit photo, bold and comic modes, after auto-cleanup (trims black bars, lifts dark scenes, sharpens)
+- quick prints from your own private feed repo (set it up behind the gear)
 - typed text with size and alignment
 - darkness slider, battery level, paper and overheat warnings
 
